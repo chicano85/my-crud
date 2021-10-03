@@ -1,6 +1,9 @@
 import React, { Component } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import axios from "axios";
 import { Modal, ModalBody, ModalFooter, ModalHeader } from "reactstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEdit, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 
 const url = "https://reqres.in/api/users?page=2";
 
@@ -18,7 +21,7 @@ class UserList extends Component {
   };
 
   getUsers = () => {
-    fetch
+    axios
       .get(url)
       .then((response) => {
         this.setState({ data: response.data });
@@ -30,7 +33,7 @@ class UserList extends Component {
 
   CreateUser = async () => {
     delete this.state.form.id;
-    await fetch
+    await axios
       .post(url, this.state.form)
       .then((response) => {
         this.modalCreate();
@@ -42,14 +45,14 @@ class UserList extends Component {
   };
 
   update = () => {
-    fetch.put(url + this.state.form.id, this.state.form).then((response) => {
+    axios.put(url + this.state.form.id, this.state.form).then((response) => {
       this.modalCreate();
       this.getUsers();
     });
   };
 
-  peticionDelete = () => {
-    fetch.delete(url + this.state.form.id).then((response) => {
+  deleteUser = () => {
+    axios.delete(url + this.state.form.id).then((response) => {
       this.setState({ modalDelete: false });
       this.getUsers();
     });
@@ -83,7 +86,155 @@ class UserList extends Component {
 
   render() {
     const { form } = this.state;
-    return <div></div>;
+    return (
+      <div>
+        <button
+          className="btn btn-success"
+          onClick={() => {
+            this.setState({ form: null, tipoModal: "Añadir" });
+            this.modalCreate();
+          }}
+        >
+          Añadir Usuario
+        </button>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Apellidos</th>
+              <th>email</th>
+            </tr>
+          </thead>
+          <tbody>
+            {this.state.data.map((user) => {
+              return (
+                <tr>
+                  <td>{user.id}</td>
+                  <td>{user.name}</td>
+                  <td>{user.lastName}</td>
+                  <td>{user.email}</td>
+                  <td>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        this.selectUser(user);
+                        this.modalCreate();
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faEdit} />
+                    </button>
+                    {"   "}
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => {
+                        this.selectUser(user);
+                        this.setState({ modalDelete: true });
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faTrashAlt} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        <Modal isOpen={this.state.modalCreate}>
+          <ModalHeader style={{ display: "block" }}>
+            <span style={{ float: "right" }} onClick={() => this.modalCreate()}>
+              x
+            </span>
+          </ModalHeader>
+          <ModalBody>
+            <div className="form-group">
+              <label htmlFor="id">ID</label>
+              <input
+                className="form-control"
+                type="text"
+                name="id"
+                id="id"
+                readOnly
+                onChange={this.handleChange}
+                value={form ? form.id : this.state.data.length + 1}
+              />
+              <br />
+              <label htmlFor="name">Nombre</label>
+              <input
+                className="form-control"
+                type="text"
+                name="name"
+                id="name"
+                onChange={this.handleChange}
+                value={form ? form.name : ""}
+              />
+              <br />
+              <label htmlFor="nombre">Apellido</label>
+              <input
+                className="form-control"
+                type="text"
+                name="lastName"
+                id="lastName"
+                onChange={this.handleChange}
+                value={form ? form.lastName : ""}
+              />
+              <br />
+              <label htmlFor="email">email</label>
+              <input
+                className="form-control"
+                type="email"
+                name="email"
+                id="email"
+                onChange={this.handleChange}
+                value={form ? form.email : ""}
+              />
+            </div>
+          </ModalBody>
+
+          <ModalFooter>
+            {this.state.tipoModal === "Añadir" ? (
+              <button
+                className="btn btn-success"
+                onClick={() => this.CreateUser()}
+              >
+                Añadir
+              </button>
+            ) : (
+              <button className="btn btn-primary" onClick={() => this.update()}>
+                Actualizar
+              </button>
+            )}
+            <button
+              className="btn btn-danger"
+              onClick={() => this.modalCreate()}
+            >
+              Cancelar
+            </button>
+          </ModalFooter>
+        </Modal>
+
+        <Modal isOpen={this.state.modalDelete}>
+          <ModalBody>
+            ¿Estás seguro que deseas eliminar este usuario? {form && form.name}
+          </ModalBody>
+          <ModalFooter>
+            <button
+              className="btn btn-danger"
+              onClick={() => this.deleteUser()}
+            >
+              Sí
+            </button>
+            <button
+              className="btn btn-secundary"
+              onClick={() => this.setState({ modalDelete: false })}
+            >
+              No
+            </button>
+          </ModalFooter>
+        </Modal>
+      </div>
+    );
   }
 }
 
